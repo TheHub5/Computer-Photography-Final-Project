@@ -150,14 +150,8 @@ def zoom(np_image, tarY, tarX, multi):
     new_w = np_image.shape[0] / multi
     new_h = np_image.shape[1] / multi
 
-    print("test", new_w)
-
     halfSizeW = int(new_w/2)
     halfSizeH = int(new_h/2)
-
-
-
-    print(halfSizeW)
 
     new_np_image = np.zeros((int(2 * halfSizeW) +1, int(halfSizeH * 2) +1, 3))
 
@@ -243,6 +237,62 @@ def drawLine(image, x1, y1, x2, y2, colour, thickness):
     
     return image
 
+def replaceColour(image, tarCol, newCol, sens):
+    new_np_image = image.copy()
+    cSens = ((sens / 100)/3)
+    colRange = np.zeros((3, 2))
+    
+    if(cSens > 0):
+        colRange[0, 0] = tarCol[0] - int(cSens * 255)
+        colRange[0, 1] = tarCol[0] + int(cSens * 255)
+
+
+        colRange[1, 0] = tarCol[1] - int(cSens * 255)
+        colRange[1, 1] =  tarCol[1] + int(cSens * 255)
+
+        colRange[2, 0] = tarCol[2] - int(cSens * 255)
+        colRange[2, 1] =  tarCol[2] + int(cSens * 255)
+
+        colRange[0, 0], colRange[0, 1] = checkColourLim(colRange[0, 0], colRange[0, 1])
+        colRange[1, 0], colRange[1, 1] = checkColourLim(colRange[1, 0], colRange[1, 1])
+        colRange[2, 0], colRange[2, 1] = checkColourLim(colRange[2, 0], colRange[2, 1])
+    else:
+        colRange[:, 0] = tarCol
+        colRange[:, 1] = tarCol
+
+
+    for x in range(new_np_image.shape[0]):
+        for y in range(new_np_image.shape[1]):
+            if(checkColSim(colRange, new_np_image[x, y, :])):
+                new_np_image[x, y, :] = newCol
+
+    return(new_np_image)
+
+
+
+def checkColSim(colRange, tarCol):
+    for c in range(3):
+        if(tarCol[c] < colRange[c,0] or tarCol[c] > colRange[c,1]):
+            return False
+
+    return True
+
+
+def checkColourLim(min, max):
+    if(max > 255):
+        min = min - (max - 255)
+        max = 255
+        if(min < 0):
+            return 0, 255
+        
+    elif(min < 0):
+        max = max - min
+        min = 0
+        if(max > 255):
+            return 0, 255
+    
+    return min, max
+
 
 def display_image(np_image):
     
@@ -256,6 +306,8 @@ def display_image(np_image):
     fig = plt.figure(figsize=(5,4),dpi=100)
     fig.add_subplot(111).bar(np.arange(len(hist)), hist)
     plt.title('Histogram')
+
+    colour = np.zeros(3)
 
     # Define the layout
     layout = [[sg.Graph(
@@ -276,11 +328,13 @@ def display_image(np_image):
         drag_submits=True)],
         [[sg.Column([[sg.Text('x:'), sg.Input('', key='-X-')]], justification='center')]],
         [[sg.Column([[sg.Text('y:'), sg.Input('', key='-Y-')]], justification='center')]],
+        [[sg.Column([[sg.Text('sens:'), sg.Slider((0, 100), 15, 1, orientation='horizontal', key='-sens-')]], justification='center')]],
         [[sg.Column([[sg.Button('Check Location')]], justification='center')]],
 
         [sg.Button('Exit'),
         sg.Push(),
         sg.Button('Replace Colour'),
+        sg.Button('reset'),
         ]]
     # gaussian
     # Create the window
@@ -302,7 +356,7 @@ def display_image(np_image):
             colour = np_image[y, x, :]
             new_np_image = np_image
 
-            new_np_image = zoom(np_image, x, y, 2)
+            new_np_image = zoom(new_np_image, x, y, 2)
 
             # create border
             new_np_image[0:boxSize, 0:boxSize, :] = 0
@@ -320,6 +374,18 @@ def display_image(np_image):
             new_image_data = np_im_to_data(new_np_image)
 
             drawNewImage(window['-IMAGE2-'], new_image_data, height)
+
+        elif event == 'Replace Colour':
+            new_np_image = np_image
+            new_np_image = replaceColour(new_np_image, colour, np.array([0, 0, 0]), values['-sens-'])
+            new_image_data = np_im_to_data(new_np_image)
+            drawNewImage(window['-IMAGE2-'], new_image_data, height)
+
+        elif event == 'reset':
+            image_data = np_im_to_data(np_image)
+            drawNewImage(window['-IMAGE2-'], image_data, height)
+
+            
 
             
 
