@@ -189,6 +189,7 @@ def zoom(np_image, tarY, tarX, multi):
     if(tarY+ halfSizeH > np_image.shape[1]):
         endY = np_image.shape[1]
         shiftY = -startY
+
     new_np_image[startX + shiftX:endX + shiftX, startY + shiftY:endY + shiftY, :] = np_image[startX:endX, startY:endY, :]
     
     
@@ -231,7 +232,16 @@ def linInterp1D(tar, array, tarSize):
 
     return result
 
+def drawLine(image, x1, y1, x2, y2, colour, thickness):
+    xDif = x2 - x1
+    yDif = y2 - y1
 
+    m = yDif/xDif
+
+    for z in range(xDif):
+        image[(x1 + z), int(y1 + (m * z)) : int(y1 + (m * z)) + thickness, :] = colour
+    
+    return image
 
 
 def display_image(np_image):
@@ -289,7 +299,8 @@ def display_image(np_image):
 
             x = int(values['-X-'])
             y = int(values['-Y-'])
-            colour = np_image[y, x, 0:3]
+            colour = np_image[y, x, :]
+            new_np_image = np_image
 
             new_np_image = zoom(np_image, x, y, 2)
 
@@ -302,6 +313,8 @@ def display_image(np_image):
             new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 0] = colour[0]
             new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 1] = colour[1]
             new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 2] = colour[2]
+
+            new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
 
 
             new_image_data = np_im_to_data(new_np_image)
