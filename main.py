@@ -15,6 +15,9 @@ import time
 import scipy as sp
 from scipy import signal
 import math
+import tkinter as tk
+from tkinter import colorchooser
+from PIL import ImageColor
 matplotlib.use('TkAgg')
 
 def np_im_to_data(im):
@@ -292,6 +295,16 @@ def checkColourLim(min, max):
             return 0, 255
     
     return min, max
+ 
+def hex_to_rgb(hex_color):
+    return ImageColor.getcolor(hex_color, "RGB")
+
+def choose_color():
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    color_code = colorchooser.askcolor(title="Choose color")[1]
+    root.destroy()
+    return color_code
 
 
 def display_image(np_image):
@@ -334,6 +347,7 @@ def display_image(np_image):
         [sg.Button('Exit'),
         sg.Push(),
         sg.Button('Replace Colour'),
+        sg.Button('Select Colour'),
         sg.Button('reset'),
         ]]
     # gaussian
@@ -375,11 +389,27 @@ def display_image(np_image):
 
             drawNewImage(window['-IMAGE2-'], new_image_data, height)
 
+        elif event == 'Select Colour':
+            # Open color chooser dialog
+            chosen_color = choose_color()
+            if chosen_color:
+                replacement_color = hex_to_rgb(chosen_color)
+        
         elif event == 'Replace Colour':
-            new_np_image = np_image
-            new_np_image = replaceColour(new_np_image, colour, np.array([0, 0, 0]), values['-sens-'])
-            new_image_data = np_im_to_data(new_np_image)
-            drawNewImage(window['-IMAGE2-'], new_image_data, height)
+            # Replace the selected color in the image
+                    if replacement_color:
+                        print ("Color Replaced!")
+                        new_np_image = np_image
+                        new_np_image = replaceColour(np_image, colour, replacement_color,values['-sens-'])
+                        new_image_data = np_im_to_data(new_np_image)
+                        drawNewImage(window['-IMAGE2-'], new_image_data, height)
+                        
+                #new_np_image = np_image
+                #new_np_image = replaceColour(new_np_image, colour, np.array([0, 0, 0]), values['-sens-'])
+                #new_image_data = np_im_to_data(new_np_image)
+                #drawNewImage(window['-IMAGE2-'], new_image_data, height)
+                
+           
 
         elif event == 'reset':
             image_data = np_im_to_data(np_image)
