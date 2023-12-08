@@ -1,6 +1,6 @@
 # Computer-Photography-Final-Project-CSCI 3240U (Colour Replacement Tool and Filters)
 ## By: Ronald Sin(100700891) & Hubert Giang(100474547)
-
+## Project Group: 12 	
 Overview:
 Our project selects a target pixel location to find a target colour. Then a replacement colour can be selected to replace the target colour in the image. There is also a sensitivity slider for the replacement colour.
 
