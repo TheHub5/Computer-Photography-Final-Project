@@ -1,10 +1,12 @@
-# Computer-Photography-Final-Project
-Final Project for Computer Photography (CSCI 3240U)
+# Computer-Photography-Final-Project (CSCI 3240U)
+## By: Ronald Sin & Hubert Giang
 
 Overview:
 Our project selects a target pixel location to find a target colour. Then a replacement colour can be selected to replace the target colour in the image. There is also a sensitivity slider for the replacement colour.
 
-Additionally there are 3 filter effects: the comic book effect, the pixelate effect, and the vintage filter.
+There are 3 filter effects: the comic book effect, the pixelate effect, and the vintage filter.
+
+There is also a Save button to save the output, an Exit button to exit the program, and a Reset button to reset the output back to the original image.
 
 Instructions:
  1. Our project initally loads in an image. The user will then input an x an y coordinate and press the "Check Location" button. This will determine the target colour of the pixel at that location and provide a zoomed in image of the location of the target pixel. 
@@ -13,10 +15,17 @@ Instructions:
  
  
 Instructions to run:
-%run main.py "C:/Users/huber/Documents/picture1.jpg" (example file location in Jupyter notebook cell)
+%run main.py "C:/Users/huber/Documents/luv.jpg" (example file location, executed in Jupyter notebook cell)
 
+### Check (pixel) Location:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/location.png)
+### Select Colour:
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/select_colour.png)
+### Replace Colour:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Colour_Replace.png)
+### Comic Book Effect:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Comic.png)
+### Pixelate Effect:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Pixel.png)
+### Vintage Effect:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Vintage.png)
