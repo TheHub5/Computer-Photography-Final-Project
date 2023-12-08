@@ -14,3 +14,9 @@ Instructions:
  
 Instructions to run:
 %run main.py "C:/Users/huber/Documents/picture1.jpg" (example file location in Jupyter notebook cell)
+
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/location.png)
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Colour_Replace.png)
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Comic.png)
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Pixel.png)
+![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/Vintage.png)
