@@ -390,7 +390,7 @@ def display_image(np_image):
                 # draw a line from the box to the selected pixel
                 new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
 
-                # display the new image
+                # dispaly the new image
                 new_image_data = np_im_to_data(new_np_image)
                 drawNewImage(window['-IMAGE2-'], new_image_data, height)
 
