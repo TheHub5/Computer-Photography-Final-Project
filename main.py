@@ -306,9 +306,117 @@ def choose_color():
     root.destroy()
     return color_code
 
+def apply_vintage_filter(image):
+    #vintage filter (black and white) with film grain
+    
+    # Convert to float and normalize the image
+    img_float = np.float32(image) / 255.0
+
+    # Desaturate the image
+    img_desaturated = cv2.cvtColor(img_float, cv2.COLOR_BGR2GRAY)
+    img_colored = cv2.cvtColor(img_desaturated, cv2.COLOR_GRAY2BGR)
+
+    # Apply a sepia tone
+    sepia_filter = np.array([[0.272, 0.534, 0.131],
+                             [0.349, 0.686, 0.168],
+                             [0.393, 0.769, 0.189]])
+    img_sepia = cv2.transform(img_colored, sepia_filter)
+
+    # Add film grain
+    noise = np.random.randn(*img_sepia.shape) * 0.05  # Reduced the grain intensity
+    img_sepia += noise
+
+    # Apply a vignette effect
+    rows, cols = img_sepia.shape[:2]
+    kernel_x = cv2.getGaussianKernel(cols, 150)  # Adjusted kernel size
+    kernel_y = cv2.getGaussianKernel(rows, 150)
+    kernel = kernel_y * kernel_x.T
+    mask = 255 * kernel / np.linalg.norm(kernel)
+    vignette = np.copy(img_sepia)
+
+    for i in range(3):
+        vignette[:, :, i] *= mask
+
+    # Normalize and convert back to uint8
+    vignette = np.clip(vignette, 0, 1)
+    vignette = np.uint8(vignette * 255)
+
+    return vignette
+
+def pixelate_effect(image, kernel_size=7):
+    #pixelate the image
+    
+    # Convert image to a suitable format for processing
+    img = np.array(image, dtype=np.uint8)
+    
+    # Create an empty image to store the oil painting effect
+    pixelate_image = np.zeros_like(img)
+
+    # Process the image in patches
+    for y in range(0, img.shape[0], kernel_size):
+        for x in range(0, img.shape[1], kernel_size):
+            for c in range(3):  # For each color channel
+                # Extract the patch
+                patch = img[y:y+kernel_size, x:x+kernel_size, c]
+                
+                # Find the most frequent color in the patch
+                if patch.size > 0:
+                    (values, counts) = np.unique(patch, return_counts=True)
+                    dominant = values[np.argmax(counts)]
+                    pixelate_image[y:y+kernel_size, x:x+kernel_size, c] = dominant
+
+    return pixelate_image
+    
+
+def apply_comic_effect(image): 
+    #comic book effect
+    
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Apply median blur
+    blurred = cv2.medianBlur(gray, 7)
+    
+    # Detect edges in the image
+    edges = cv2.adaptiveThreshold(blurred, 255, 
+                                  cv2.ADAPTIVE_THRESH_MEAN_C, 
+                                  cv2.THRESH_BINARY, 9, 9)
+    
+    # Convert back to color
+    edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    
+    # Reduce the color palette
+    img_small = cv2.pyrDown(image)
+    num_colors = 8
+    img_small = cv2.cvtColor(img_small, cv2.COLOR_BGR2Lab)
+    img_small = img_small.reshape((-1, 3))
+
+    # Use OpenCV's k-means clustering
+    criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, 20, 1.0)
+    _, labels, centers = cv2.kmeans(np.float32(img_small), num_colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+
+    # Reconstruct the quantized image
+    centers = np.uint8(centers)
+    quantized = centers[labels.flatten()]
+    quantized = quantized.reshape((image.shape[0] // 2, image.shape[1] // 2, 3))
+    quantized = cv2.cvtColor(quantized, cv2.COLOR_Lab2BGR)
+    quantized = cv2.pyrUp(quantized)
+    
+    # Combine edges and color-quantized image
+    comic_img = cv2.bitwise_and(quantized, edges_colored)
+    
+    return comic_img
+
 
 def display_image(np_image):
+
+    original_image = np_image.copy()
+    modified_image=original_image
+    modified_image_data = original_image.copy()
     
+    colour = [0,0,0] #black default colour
+    replacement_color = [255, 0, 0]  # Red defualt replacement colour 
+  
     # Convert numpy array to data that sg.Graph can understand
     image_data = np_im_to_data(np_image)
 
@@ -341,14 +449,20 @@ def display_image(np_image):
         drag_submits=True)],
         [[sg.Column([[sg.Text('x:'), sg.Input('', key='-X-')]], justification='center')]],
         [[sg.Column([[sg.Text('y:'), sg.Input('', key='-Y-')]], justification='center')]],
-        [[sg.Column([[sg.Text('sens:'), sg.Slider((0, 100), 15, 1, orientation='horizontal', key='-sens-')]], justification='center')]],
+        [[sg.Column([[sg.Text('Sensitivity:'), sg.Slider((0, 100), 15, 1, orientation='horizontal', key='-sens-')]], justification='center')]],
         [[sg.Column([[sg.Button('Check Location')]], justification='center')]],
+        
 
         [sg.Button('Exit'),
+        sg.Button('Save', button_color=('orange')),
         sg.Push(),
+        
+        sg.Button('Comic Book Effect', button_color=('green')),
+        sg.Button('Pixelate Effect',button_color=('green')),
+        sg.Button('Vintage Effect',button_color=('green')),
         sg.Button('Replace Colour'),
         sg.Button('Select Colour'),
-        sg.Button('reset'),
+        sg.Button('Reset',button_color=('red')),
         ]]
     # gaussian
     # Create the window
@@ -401,21 +515,65 @@ def display_image(np_image):
                         print ("Color Replaced!")
                         new_np_image = np_image
                         new_np_image = replaceColour(np_image, colour, replacement_color,values['-sens-'])
+                        modified_image = new_np_image #update modified_image
                         new_image_data = np_im_to_data(new_np_image)
                         drawNewImage(window['-IMAGE2-'], new_image_data, height)
                         
-                #new_np_image = np_image
-                #new_np_image = replaceColour(new_np_image, colour, np.array([0, 0, 0]), values['-sens-'])
-                #new_image_data = np_im_to_data(new_np_image)
-                #drawNewImage(window['-IMAGE2-'], new_image_data, height)
-                
-           
 
-        elif event == 'reset':
+                
+        elif event == 'Vintage Effect':
+            vintage_image = apply_vintage_filter(np_image)
+            modified_image = vintage_image #update modified_image
+            vintage_image_data = np_im_to_data(vintage_image)
+            drawNewImage(window['-IMAGE2-'], vintage_image_data, vintage_image.shape[0])  # Replace '-IMAGE-' with your actual image display element key
+
+        
+        elif event == 'Pixelate Effect':
+            
+            pixelate_image = pixelate_effect(np_image)
+            modified_image = pixelate_image #update modified_image
+            pixelate_image_data = np_im_to_data(pixelate_image)
+            drawNewImage(window['-IMAGE2-'], pixelate_image_data, pixelate_image.shape[0])
+            
+        elif event == 'Comic Book Effect':
+            # Apply the comic book effect to the image
+            comic_image = apply_comic_effect(np_image)
+            modified_image = comic_image #update modified_image
+            # Update the GUI to display the comic book image
+            # You might need to convert the image to a format suitable for your GUI
+            comic_image_data = np_im_to_data(comic_image)
+            drawNewImage(window['-IMAGE2-'], comic_image_data, comic_image.shape[0])
+
+        elif event == 'Reset':
             image_data = np_im_to_data(np_image)
             drawNewImage(window['-IMAGE2-'], image_data, height)
-
             
+
+        elif event == 'Save':
+            if modified_image is not None:
+                # Ensure the image is in the correct format
+                if modified_image.dtype != np.uint8:
+                    modified_image = np.clip(modified_image, 0, 255).astype(np.uint8)
+                
+                # Convert the image to BGR format for OpenCV
+                image_to_save = cv2.cvtColor(modified_image, cv2.COLOR_RGB2BGR)
+                
+                # Open a 'Save As' dialog to get the filename from the user
+                save_filename = sg.popup_get_file('Save Image As', save_as=True, no_window=True, file_types=(('PNG Files', '*.png'), ('JPEG Files', '*.jpg'), ('All Files', '*.*')), default_extension='png')
+                
+                if save_filename and save_filename.strip():
+                    # Ensure the filename has an extension
+                    if not any(save_filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff']):
+                        sg.popup('Error', 'Please provide a valid image file extension for the file.')
+                    else:
+                        # Save the image using the filename provided by the user
+                        try:
+                            cv2.imwrite(save_filename, image_to_save)
+                            sg.popup('Image saved!', f'File has been saved to: {save_filename}')
+                        except Exception as e:
+                            sg.popup('Error', f'Failed to save the image: {e}')
+                else:
+                    sg.popup('Save Cancelled', 'Image save operation was cancelled.')    
 
             
 
