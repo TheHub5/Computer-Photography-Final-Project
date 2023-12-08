@@ -1,6 +1,6 @@
-# Computer-Photography-Final-Project (CSCI 3240U)
-## By: Ronald Sin & Hubert Giang
-
+# Computer-Photography-Final-Project-CSCI 3240U (Colour Replacement Tool and Filters)
+## By: Ronald Sin(100700891) & Hubert Giang(100474547)
+## Project Group: 12 	
 Overview:
 Our project selects a target pixel location to find a target colour. Then a replacement colour can be selected to replace the target colour in the image. There is also a sensitivity slider for the replacement colour.
 
@@ -15,7 +15,8 @@ Instructions:
  
  
 Instructions to run:
-%run main.py "C:/Users/huber/Documents/luv.jpg" (example file location, executed in Jupyter notebook cell)
+Jupyter Notebook: %run main.py "C:/Users/huber/Documents/luv.jpg" (example file location)
+Linux: "python3 main.py ../image.png"
 
 ### Check (pixel) Location:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/location.png)
