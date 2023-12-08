@@ -128,7 +128,7 @@ def drawLine(image, x1, y1, x2, y2, colour, thickness):
 def replaceColour(image, tarCol, newCol, sens):
     new_np_image = image.copy()
 
-    cSens = ((sens / 100)/3) # distribute the sensitivity evenly and convert to decimal
+    cSens = ((sens / 100)/2) # distribute the sensitivity evenly and convert to decimal
     colRange = np.zeros((3, 2))
     
 
@@ -308,11 +308,6 @@ def display_image(np_image):
 
     height = np_image.shape[0]
     width = np_image.shape[1]
-
-    hist = construct_image_histogram(np_image)
-    fig = plt.figure(figsize=(5,4),dpi=100)
-    fig.add_subplot(111).bar(np.arange(len(hist)), hist)
-    plt.title('Histogram')
 
     colour = np.zeros(3)
 
