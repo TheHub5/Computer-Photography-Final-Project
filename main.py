@@ -28,148 +28,35 @@ def np_im_to_data(im):
         data = output.getvalue()
     return data
 
-def construct_image_histogram(np_image):
-    L = 256
-    bins = np.arange(L+1)
-    hist, _ = np.histogram(np_image, bins)
-    return hist
-
-def draw_hist(canvas, figure):
-    tkcanvas = FigureCanvasTkAgg(figure, canvas)
-    tkcanvas.get_tk_widget()
-    tkcanvas.draw()
-    tkcanvas.get_tk_widget().pack(side='top', fill='both', expand=1)
-    return tkcanvas
 
 def drawNewImage(canvas, image, height):
     canvas.erase()
     canvas.draw_image(data=image, location=(0, height))
 
-
-def apply_filter_to_patch(patch, filter):
-    return np.sum(filter * patch)
-
-def apply_filter_to_image(image, filter):
-    width = int((len(filter)-1)/2)
-    result = np.ones( (len(image)- (len(filter)-1), len(image[0])- (len(filter[0])-1), 3) )
-    final = image
-    
-    for i in range(len(result)):
-        for j in range(len(result[0])):
-            for c in range(3):
-                # target coords
-                centerX = int(j + ((len(filter)-1)/2))
-                centerY = int(i + ((len(filter)-1)/2))
-                result[i][j][c] = apply_filter_to_patch(image[centerY-width:centerY+width+1, centerX-width:centerX+width+1, c], filter)
-    
-    return result
-
-def apply_filter_to_imagec(image, filter):
-    width = int((len(filter)-1)/2)
-    result = np.ones( (len(image)- (len(filter)-1), len(image[0])- (len(filter[0])-1), 3) )
-    final = image
-    
-
-    for c in range(3):
-        # target coords
-        centerX = int(j + ((len(filter)-1)/2))
-        centerY = int(i + ((len(filter)-1)/2))
-        result[:][:][c] = sp.signal.convolve2d(np_image[:, :, c], filter, mode='same')
-    
-    return result
-
-def createAvgKernel(halfSize):
-    size = 2*halfSize+1
-    f = (np.ones((size, size)))
-    f = f/np.sum(f)
-    return f
-
-def createGausBlur(halfSize, mu, sigma):
-    size = 2*halfSize+1
-
-    gy_ = np.empty((size))
-
-    for i in range(-halfSize,halfSize):
-        gy_[i + halfSize] = g(mu, sigma, i)
-
-    
-    gx_ = gy_.reshape((size, 1))
-    g_ = gx_ * gy_
-
-    g_ = g_ / np.sum(g_)
-    return g_
-
-def g(mu, s, x):
-    exponent = -((x - mu)**2)/(2*s*s)
-    constant = 1/(s * np.sqrt(2 * np.pi))
-    return constant * np.exp( exponent )
-
-def saveSettings(sat, con, pal, path):
-    settings = {'sat': sat,'con': con,'pal': pal}
-    with open(file_path, 'w') as file:
-        yaml.dump(settings, file, default_flow_style=False)
-
-def saturation(image, sat):
-    himage = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
-    himage[:, :, 1] = himage[:, :, 1] * sat
-    himage[:, :, 1] = np.clip(himage[:,:, 1], 0, 255)
-    return cv2.cvtColor(himage, cv2.COLOR_HSV2RGB)
-
-def contrast(image, con):
-    image = np.float32(image)/255.0
-    con = np.clip(con, 0.5, 2.5)
-    conscale = 2 * (con - 0.5)
-
-    
-    if conscale >= 0:
-        a = 10.0 * conscale 
-    else:
-        a = -10.0/(1 + np.exp(-conscale)) 
-
-    v = 1 + np.exp(-a*(image - 0.5))
-    curve = 1/v
-
-    if con == 1.0:
-        curve = image
-
-    cimage = np.uint8(curve*255)
-
-    return cimage
-
-def palette(image, pal):
-    image = np.float32(image)/255.0
-
-    if pal > 0:
-        image[:, :, 2] = image[:, :, 2] + pal / 100
-        image[:, :, 2] = np.clip(image[:, :, 2], 0, 1)
-    elif pal < 0:
-        image[:, :, 0] = image[:, :, 0] - pal / 100
-        image[:, :, 0] = np.clip(image[:, :, 0], 0, 1)
-
-    return np.uint8(image * 255)
-
 # zoom in on a target location
 def zoom(np_image, tarY, tarX, multi):
+    # get the target dimensions
     new_w = np_image.shape[0] / multi
     new_h = np_image.shape[1] / multi
 
+    # pixels around the target pixel
     halfSizeW = int(new_w/2)
     halfSizeH = int(new_h/2)
 
-    new_np_image = np.zeros((int(2 * halfSizeW) +1, int(halfSizeH * 2) +1, 3))
+    new_np_image = np.zeros((int(2 * halfSizeW) +1, int(halfSizeH * 2) +1, 3)) # create new array the size of the target image
 
+    # where to start and stop extracting pixels from the original image
     startX = tarX- halfSizeW
     startY = tarY- halfSizeH
     endX = tarX + halfSizeW
     endY = tarY + halfSizeH
 
+    # how much to shift the image
     shiftX = 0
     shiftY = 0
 
-    shiftX2 = 0
-    shiftX2 = 0
-
-    if((tarX- halfSizeW) < 0):
+    # shift the image if the target pixels end up off screen
+    if((tarX- halfSizeW) < 0): 
         shiftX = -(tarX- halfSizeW)
         startX = 0
     if(tarX+ halfSizeW > new_np_image.shape[0]):
@@ -187,14 +74,13 @@ def zoom(np_image, tarY, tarX, multi):
         endY = np_image.shape[1]
         shiftY = -startY
 
+    # extract
     new_np_image[startX + shiftX:endX + shiftX, startY + shiftY:endY + shiftY, :] = np_image[startX:endX, startY:endY, :]
     
-    
-    print(tarX- int(new_w/2))
     return(linInterp(new_np_image, np_image.shape[0], np_image.shape[1]))
-    # return(new_np_image)
 
 
+# preform 2d linear interpolation
 def linInterp(np_image, tarW, tarH):
     ratioW = (np_image.shape[0] - 1) / (tarW - 1)
     ratioH = (np_image.shape[1] - 1) / (tarH - 1)
@@ -215,6 +101,7 @@ def linInterp(np_image, tarW, tarH):
 
     return result
 
+# preform 1d linear interpolation
 def linInterp1D(tar, array, tarSize):
     ratio = (array.shape[0] - 1) / (tarSize - 1)
 
@@ -229,6 +116,7 @@ def linInterp1D(tar, array, tarSize):
 
     return result
 
+# draw a line
 def drawLine(image, x1, y1, x2, y2, colour, thickness):
     xDif = x2 - x1
     yDif = y2 - y1
@@ -240,15 +128,18 @@ def drawLine(image, x1, y1, x2, y2, colour, thickness):
     
     return image
 
+# replace the selected colour with another selected colour
 def replaceColour(image, tarCol, newCol, sens):
     new_np_image = image.copy()
-    cSens = ((sens / 100)/3)
+
+    cSens = ((sens / 100)/3) # distribute the sensitivity evenly and convert to decimal
     colRange = np.zeros((3, 2))
     
+
     if(cSens > 0):
+        # if sens is greater than 0 find the range of colour to be the target
         colRange[0, 0] = tarCol[0] - int(cSens * 255)
         colRange[0, 1] = tarCol[0] + int(cSens * 255)
-
 
         colRange[1, 0] = tarCol[1] - int(cSens * 255)
         colRange[1, 1] =  tarCol[1] + int(cSens * 255)
@@ -260,18 +151,17 @@ def replaceColour(image, tarCol, newCol, sens):
         colRange[1, 0], colRange[1, 1] = checkColourLim(colRange[1, 0], colRange[1, 1])
         colRange[2, 0], colRange[2, 1] = checkColourLim(colRange[2, 0], colRange[2, 1])
     else:
+        # if less then 0 then only target the selected colour
         colRange[:, 0] = tarCol
         colRange[:, 1] = tarCol
 
-
+    # loop through image lookign for pixels in the colour range and replace with selected colour
     for x in range(new_np_image.shape[0]):
         for y in range(new_np_image.shape[1]):
             if(checkColSim(colRange, new_np_image[x, y, :])):
                 new_np_image[x, y, :] = newCol
 
     return(new_np_image)
-
-
 
 def checkColSim(colRange, tarCol):
     for c in range(3):
@@ -481,27 +371,32 @@ def display_image(np_image):
 
             x = int(values['-X-'])
             y = int(values['-Y-'])
-            colour = np_image[y, x, :]
-            new_np_image = np_image
 
-            new_np_image = zoom(new_np_image, x, y, 2)
+            # check if valid coords
+            if(x > (np_image.shape[1] - 1) or y > (np_image.shape[0] - 1) or x < 0 or y < 0):
+                sg.popup_no_buttons('Selected out of bounds x/y', keep_on_top=True)
+            else:
+                colour = np_image[y, x, :] # extract colour from selected pixel
+                new_np_image = np_image
 
-            # create border
-            new_np_image[0:boxSize, 0:boxSize, :] = 0
-            new_np_image[0:boxSize, 0:boxSize, 0] = 255
+                new_np_image = zoom(new_np_image, x, y, 2) # create zoomed in image
 
-
-            # fill with selected colour
-            new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 0] = colour[0]
-            new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 1] = colour[1]
-            new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 2] = colour[2]
-
-            new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
+                # create border
+                new_np_image[0:boxSize, 0:boxSize, :] = 0
+                new_np_image[0:boxSize, 0:boxSize, 0] = 255
 
 
-            new_image_data = np_im_to_data(new_np_image)
+                # fill with selected colour
+                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 0] = colour[0]
+                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 1] = colour[1]
+                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 2] = colour[2]
 
-            drawNewImage(window['-IMAGE2-'], new_image_data, height)
+                # draw a line from the box to the selected pixel
+                new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
+
+                # dispaly the new image
+                new_image_data = np_im_to_data(new_np_image)
+                drawNewImage(window['-IMAGE2-'], new_image_data, height)
 
         elif event == 'Select Colour':
             # Open color chooser dialog
