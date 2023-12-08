@@ -1,7 +1,3 @@
-# Faisal Z. Qureshi
-# www.vclab.ca
-
-
 import argparse
 import PySimpleGUI as sg
 from PIL import Image
