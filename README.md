@@ -18,6 +18,8 @@ Instructions to run:
 Jupyter Notebook: %run main.py "C:/Users/huber/Documents/luv.jpg" (example file location)
 Linux: "python3 main.py ../image.png"
 
+Youtube Demo: https://www.youtube.com/watch?v=jS4TsNBldaY
+
 ### Check (pixel) Location:
 ![Model](https://github.com/TheHub5/Computer-Photography-Final-Project/blob/main/Computer_Photography_Project_Images/location.png)
 ### Select Colour:
