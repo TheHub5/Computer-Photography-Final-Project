@@ -356,38 +356,51 @@ def display_image(np_image):
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Exit':
             break
+            
         elif event == 'Check Location':
             boxSize = 50
             boxWidth = 5
 
-            x = int(values['-X-'])
-            y = int(values['-Y-'])
+            x_input = values['-X-']
+            y_input = values['-Y-']
 
-            # check if valid coords
-            if(x > (np_image.shape[1] - 1) or y > (np_image.shape[0] - 1) or x < 0 or y < 0):
-                sg.popup_no_buttons('Selected out of bounds x/y', keep_on_top=True)
+            # Check if the X or Y input fields are left blank
+            if not x_input or not y_input:
+                sg.popup('Error', 'Please enter values for both X and Y.')
             else:
-                colour = np_image[y, x, :] # extract colour from selected pixel
-                new_np_image = np_image
+                # Now proceed with converting the input to integers and checking if within bounds
+                try:
+                    x = int(x_input)
+                    y = int(y_input)
 
-                new_np_image = zoom(new_np_image, x, y, 2) # create zoomed in image
+                    # Check if valid coords
+                    if x > (np_image.shape[1] - 1) or y > (np_image.shape[0] - 1) or x < 0 or y < 0:
+                        sg.popup_no_buttons('Selected out of bounds x/y', keep_on_top=True)
+                    else:
+                        # Continue with your existing logic after the input has been validated
+                        colour = np_image[y, x, :]  # extract colour from selected pixel
+                        new_np_image = np_image
 
-                # create border
-                new_np_image[0:boxSize, 0:boxSize, :] = 0
-                new_np_image[0:boxSize, 0:boxSize, 0] = 255
+                        new_np_image = zoom(new_np_image, x, y, 2)  # create zoomed in image
 
+                        # create border
+                        new_np_image[0:boxSize, 0:boxSize, :] = 0
+                        new_np_image[0:boxSize, 0:boxSize, 0] = 255
 
-                # fill with selected colour
-                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 0] = colour[0]
-                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 1] = colour[1]
-                new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 2] = colour[2]
+                        # fill with selected colour
+                        new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 0] = colour[0]
+                        new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 1] = colour[1]
+                        new_np_image[boxWidth:boxSize - boxWidth, boxWidth:boxSize - boxWidth, 2] = colour[2]
 
-                # draw a line from the box to the selected pixel
-                new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
+                        # draw a line from the box to the selected pixel
+                        new_np_image = drawLine(new_np_image, boxSize - boxWidth, boxSize - boxWidth, int(new_np_image.shape[0]/ 2), int(new_np_image.shape[1]/ 2), np.array([255, 0, 0]), 3)
 
-                # display the new image
-                new_image_data = np_im_to_data(new_np_image)
-                drawNewImage(window['-IMAGE2-'], new_image_data, height)
+                        # display the new image
+                        new_image_data = np_im_to_data(new_np_image)
+                        drawNewImage(window['-IMAGE2-'], new_image_data, height)
+                except ValueError:
+                    sg.popup('Error', 'Invalid input. Please enter numeric values for X and Y.')
+
 
         elif event == 'Select Colour':
             # Open color chooser dialog
