@@ -11,7 +11,7 @@ There is also a Save button to save the output, an Exit button to exit the progr
 **Instructions:**
  1. Our project initally loads in an image. The user will then input an x an y coordinate and press the "Check Location" button. This will determine the target colour of the pixel at that location and provide a zoomed in image of the location of the target pixel. 
  2. Next the user can select a replacement colour from the "Select Colour" Button. 
- 3. Finally the "Replace Colour" button will replace the target colour in the image with the replacement colour. The sensitivity slider can be used to the senstivity of the replacement colour in the image. 
+ 3. Finally the "Replace Colour" button will replace the target colour in the image with the replacement colour. The sensitivity slider can be used to adjust the senstivity of the replacement colour in the image. 
  
  
 # Instructions to run:
